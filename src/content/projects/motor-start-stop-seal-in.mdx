@@ -98,6 +98,17 @@ A real benefit of doing this in a PLC rather than purely with relays: the seal-i
 is logical, not a physical contact that can weld or chatter, and the same inputs
 can drive interlocks, run-hour counters, and alarms without rewiring.
 
+## Live simulation
+
+A JavaScript twin of the ladder logic above, running on a ~100 ms scan loop — the
+same **read inputs → solve logic → write outputs** cycle a real PLC uses. Hold
+**Start** and release it: the seal-in keeps the motor running. **Stop**, **E-Stop**,
+or an **Overload** trip each drop the coil. (This is a faithful re-implementation
+of the logic for the browser — the actual ladder runs in OpenPLC; the export is in
+the repo.)
+
+<MotorSim />
+
 ## Visuals
 
 {/* Add the OpenPLC ladder screenshot and a wiring diagram to

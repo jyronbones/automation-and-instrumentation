@@ -1,8 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import type { MDXComponents } from "mdx/types";
+import { MotorSim } from "@/components/plc/motor-sim";
 
 /** Styling map for MDX project bodies — keeps the industrial tone. */
 export const mdxComponents: MDXComponents = {
+  // Interactive simulators, embeddable directly in project MDX.
+  MotorSim,
+
   h2: (props) => (
     <h2
       className="mt-12 scroll-mt-24 text-xl font-semibold tracking-tight text-foreground md:text-2xl"
