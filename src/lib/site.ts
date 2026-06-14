@@ -11,10 +11,14 @@ export const site = {
   linkedin: "https://linkedin.com/in/byron-jones89",
   url: "https://byronjones.vercel.app",
   availableForCoop: true,
+  // Contact form posts here via AJAX; Formspree forwards to your inbox. The
+  // visitor never sees Formspree — just the form and the success message.
+  formspreeEndpoint: "https://formspree.io/f/mqeowjvq",
 } as const;
 
 export const nav = [
   { href: "/", label: "Home" },
   { href: "/projects", label: "Projects" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ] as const;

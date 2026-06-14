@@ -9,8 +9,8 @@ export function SiteFooter() {
       <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between gap-4 px-6 py-10 sm:flex-row sm:items-center">
         <div className="flex items-center gap-4">
           <Link
-            href={`mailto:${site.email}`}
-            aria-label="Email"
+            href="/contact"
+            aria-label="Contact"
             className="text-muted-foreground transition-colors hover:text-amber"
           >
             <Mail className="size-5" />

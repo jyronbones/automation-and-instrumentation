@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Mail, MapPin } from "lucide-react";
-import { GithubIcon, LinkedinIcon } from "@/components/brand-icons";
+import { FileText, Download, MapPin } from "lucide-react";
 import { Section, SectionLabel } from "@/components/section";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { SkillPill } from "@/components/skill-pill";
@@ -104,36 +102,28 @@ export default function AboutPage() {
 
       <ScrollReveal delay={0.2}>
         <div className="mt-12 rounded-lg border border-border bg-card p-6">
-          <h2 className="text-xl font-semibold tracking-tight">Get in touch</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Résumé</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Open to automation &amp; instrumentation co-op opportunities.
+            The full breakdown of my education, experience, and skills.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              href={`mailto:${site.email}`}
+            <a
+              href="/resume.pdf"
+              target="_blank"
+              rel="noreferrer"
               className={cn(buttonVariants({ size: "lg" }))}
             >
-              <Mail className="size-4" />
-              Email me
-            </Link>
-            <Link
-              href={site.github}
-              target="_blank"
-              rel="noreferrer"
+              <FileText className="size-4" />
+              View résumé
+            </a>
+            <a
+              href="/resume.pdf"
+              download
               className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
             >
-              <GithubIcon className="size-4" />
-              GitHub
-            </Link>
-            <Link
-              href={site.linkedin}
-              target="_blank"
-              rel="noreferrer"
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-            >
-              <LinkedinIcon className="size-4" />
-              LinkedIn
-            </Link>
+              <Download className="size-4" />
+              Download
+            </a>
           </div>
         </div>
       </ScrollReveal>
