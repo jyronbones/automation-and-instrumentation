@@ -53,7 +53,7 @@ const outputs: OutputDev[] = [
 export function WiringDiagram() {
   return (
     <svg
-      viewBox="0 0 960 900"
+      viewBox="0 0 960 960"
       className="my-2 w-full font-mono"
       role="img"
       aria-label="PLC I/O and power wiring diagram for the motor start/stop control"
@@ -142,7 +142,8 @@ export function WiringDiagram() {
       </text>
 
       {/* ===================== LEGEND ===================== */}
-      <g transform="translate(40, 858)">
+      <line x1={40} y1={888} x2={920} y2={888} stroke={BS} strokeDasharray="2 4" />
+      <g transform="translate(40, 922)">
         <NO x={14} y={0} />
         <text x={30} y={4} fill={MU} fontSize={12}>
           NO contact
