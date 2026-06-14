@@ -55,9 +55,12 @@ The core is a **set/reset latch** that I'll call `Fill`. It captures the idea of
 "I'm in the middle of filling, keep going":
 
 ```
-SET   Fill   when level drops to LSL   (level got low — start filling)
-RESET Fill   when level rises to LSH   (reached high — stop filling)
+SET   Fill   when the low float clears   (LSL = 0, level fell below it)
+RESET Fill   when the high float is made (LSH = 1, level reached it)
 ```
+
+The floats read "wet" (1) when liquid reaches them, so a falling level *clears*
+the low float — that's the call to start filling.
 
 Because the latch is *set* at the low float and only *reset* at the high float,
 the pump runs the tank all the way from low up to high, then stays off until the
@@ -106,6 +109,16 @@ can't be missed:
 | Off selected | Off | — |
 | Level reaches `LSHH` | Forced Off | On (latched) |
 | `ACK/Reset` after recovery | resumes mode | Clears |
+
+## Live simulation
+
+A closed-loop twin of the logic above: the control drives the pump, and a small
+plant model integrates the tank level back, so the floats switch from the level
+itself. Leave it in **Auto** to watch the pump cycle within the deadband; flip to
+**Hand** to force an overflow and see the alarm latch. (Faithful re-implementation
+for the browser — the real ladder runs in OpenPLC; export in the repo.)
+
+<TankSim />
 
 ## Visuals
 
