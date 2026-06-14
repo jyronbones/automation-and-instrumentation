@@ -2,12 +2,14 @@
 import type { MDXComponents } from "mdx/types";
 import { MotorSim } from "@/components/plc/motor-sim";
 import { TankSim } from "@/components/plc/tank-sim";
+import { ConveyorSim } from "@/components/plc/conveyor-sim";
 
 /** Styling map for MDX project bodies — keeps the industrial tone. */
 export const mdxComponents: MDXComponents = {
   // Interactive simulators, embeddable directly in project MDX.
   MotorSim,
   TankSim,
+  ConveyorSim,
 
   h2: (props) => (
     <h2

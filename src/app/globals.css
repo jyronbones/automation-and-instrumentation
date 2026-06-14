@@ -104,4 +104,36 @@
     @apply inline-flex items-center rounded-md border border-border bg-secondary/50
       px-2.5 py-1 font-mono text-xs text-muted-foreground;
   }
+
+  /* Conveyor sim: scrolling belt surface + travelling material */
+  .belt-surface {
+    background-image: repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.14) 0 2px,
+      transparent 2px 14px
+    );
+    background-size: 28px 100%;
+  }
+  .belt-surface.is-running {
+    animation: belt-scroll 0.55s linear infinite;
+  }
+  .ore-chunk {
+    animation: ore-run var(--dur, 2.2s) linear infinite;
+    animation-delay: var(--delay, 0s);
+  }
+}
+
+@keyframes belt-scroll {
+  to {
+    background-position: -28px 0;
+  }
+}
+
+@keyframes ore-run {
+  from {
+    left: -6%;
+  }
+  to {
+    left: 102%;
+  }
 }
