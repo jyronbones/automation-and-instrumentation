@@ -1,0 +1,129 @@
+---
+title: "Tank Level Control System"
+summary: "Two-point (hysteresis) pump control that keeps a process tank between low and high setpoints, with a Hand-Off-Auto selector and a latched high-high overflow alarm. The bread-and-butter of process control."
+order: 2
+featured: true
+repo: "https://github.com/jyronbones/openplc-tank-level"
+skills:
+  - "Process Control"
+  - "Hysteresis / Deadband Control"
+  - "Hand-Off-Auto (HOA)"
+  - "Level Instrumentation"
+  - "Alarm Latching"
+---
+
+## Problem description
+
+Mines and process plants run on tanks — slurry tanks, water and reagent storage,
+thickener feed, dewatering sumps. Almost all of them need the same thing: keep the
+level inside a band, run a pump to do it, and raise an alarm before anything
+overflows.
+
+The naïve approach — "turn the pump on when the level is low, off when it's high"
+using a single setpoint — fails in practice because the pump **short-cycles**:
+right at the setpoint it rapidly switches on and off, which wears out the motor,
+the contactor, and the pump itself. The fix is a **deadband (hysteresis)** between
+two setpoints, and that's what this project implements. On top of the automatic
+control it adds an operator **Hand-Off-Auto** selector and a **fail-safe overflow
+alarm**.
+
+This scenario is a *fill* tank: a pump draws from a source and fills the tank, and
+the control holds the level between a low and a high float.
+
+## I/O assignment
+
+| Tag | Device | Type | Address |
+| --- | --- | --- | --- |
+| `LSL` | Low-level float | NO (true when level reaches it) | `%IX0.0` |
+| `LSH` | High-level float | NO | `%IX0.1` |
+| `LSHH` | High-high (overflow) float | NO | `%IX0.2` |
+| `HOA-Hand` | Selector position | NO | `%IX0.3` |
+| `HOA-Auto` | Selector position | NO | `%IX0.4` |
+| `ACK/Reset` | Pushbutton | NO, momentary | `%IX0.5` |
+| `Pump` | Pump contactor coil | Output | `%QX0.0` |
+| `Overflow alarm` | Horn / beacon | Output | `%QX0.1` |
+
+> Discrete float switches keep the logic readable. The same scheme scales to an
+> analog level transmitter (`LT`, 4–20 mA) by comparing the measured level to
+> numeric setpoints with a deadband — the control concept is identical.
+
+## Logic explanation
+
+### Automatic mode — two-point control with deadband
+
+The core is a **set/reset latch** that I'll call `Fill`. It captures the idea of
+"I'm in the middle of filling, keep going":
+
+```
+SET   Fill   when level drops to LSL   (level got low — start filling)
+RESET Fill   when level rises to LSH   (reached high — stop filling)
+```
+
+Because the latch is *set* at the low float and only *reset* at the high float,
+the pump runs the tank all the way from low up to high, then stays off until the
+level falls back to low again. The gap between `LSL` and `LSH` is the **deadband**
+— it's what eliminates short-cycling. In auto:
+
+```
+Pump (Auto) = Fill AND HOA-Auto AND NOT Overflow
+```
+
+### Hand mode — manual override, interlock retained
+
+The **Hand-Off-Auto** selector is standard plant practice: *Hand* for
+maintenance/commissioning, *Off* to lock out, *Auto* for normal running. In Hand
+the pump runs continuously regardless of level **except** that the overflow
+interlock is still enforced — a manual mode should never be able to flood the
+tank:
+
+```
+Pump (Hand) = HOA-Hand AND NOT Overflow
+Pump = Pump(Auto) OR Pump(Hand)
+```
+
+With the selector in **Off**, neither path is true, so the pump is positively
+stopped.
+
+### Overflow protection — latched, fail-safe
+
+If the level ever reaches the high-high float `LSHH`, something has failed (a
+stuck `LSH`, a control fault, a stuck pump). The response is latched so the event
+can't be missed:
+
+- Set an `Overflow` latch on `LSHH`.
+- `Overflow` forces the pump **off** in every mode and energizes the alarm.
+- The latch holds until the level has recovered **and** the operator presses
+  `ACK/Reset` — so the alarm can't simply clear itself the moment the level dips.
+
+### Sequence of operation
+
+| Condition | Pump | Alarm |
+| --- | --- | --- |
+| Auto, level above `LSL` | Off (idle) | — |
+| Auto, level falls to `LSL` | On (fills to `LSH`) | — |
+| Auto, level reaches `LSH` | Off | — |
+| Hand selected | On | — |
+| Off selected | Off | — |
+| Level reaches `LSHH` | Forced Off | On (latched) |
+| `ACK/Reset` after recovery | resumes mode | Clears |
+
+## Visuals
+
+{/* Add the OpenPLC ladder screenshot and a P&ID-style sketch to
+    /public/projects/tank-level/ then reference them here, e.g.:
+
+![OpenPLC ladder for the tank level control](/projects/tank-level/ladder.png)
+![Tank, floats, and pump P&ID sketch](/projects/tank-level/pid.png)
+*/}
+
+> To be added: OpenPLC ladder view, a simple P&ID-style sketch of the tank /
+> floats / pump, and a clip showing the pump cycling between the low and high
+> floats and the overflow alarm latching at high-high.
+
+## Skills used
+
+- Two-point (hysteresis) control and deadband tuning to prevent short-cycling
+- Set/reset latching for both process state and alarms
+- Hand-Off-Auto operator control with interlocks preserved across modes
+- Fail-safe alarm design (latched, acknowledge-to-clear)
+- Level instrumentation: discrete floats, and the path to an analog transmitter

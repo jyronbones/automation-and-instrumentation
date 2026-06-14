@@ -1,0 +1,120 @@
+---
+title: "Motor Start/Stop Control System (Ladder Logic)"
+summary: "A 3-wire latching motor control with seal-in, fail-safe E-stop, and thermal-overload protection — built and simulated in OpenPLC. The single most common control circuit in industry."
+order: 1
+featured: true
+repo: "https://github.com/jyronbones/openplc-motor-start-stop"
+skills:
+  - "Ladder Logic (IEC 61131-3)"
+  - "3-Wire / Seal-in Control"
+  - "Fail-safe E-Stop"
+  - "Motor Overload Protection"
+  - "OpenPLC Simulation"
+---
+
+## Problem description
+
+Nearly every powered asset in a plant — a pump, fan, conveyor, crusher, agitator —
+starts the same way: a momentary **Start** button energizes the motor, a momentary
+**Stop** button de-energizes it, and the motor keeps running after the operator
+lets go of Start. Layered on top of that are the things that must be able to stop
+the motor no matter what: an **emergency stop**, and the motor's own **thermal
+overload** when it's drawing too much current.
+
+This is the classic **3-wire control circuit**, and it's the foundation everything
+else is built on. I implemented it in ladder logic and verified its behaviour in
+the OpenPLC simulator. The tank-level and conveyor projects extend the same
+patterns — latching, fail-safe interlocks, and sequencing.
+
+## I/O assignment
+
+| Signal | Device | Type | Address |
+| --- | --- | --- | --- |
+| Start | Pushbutton | NO, momentary | `%IX0.0` |
+| Stop | Pushbutton | NC, momentary | `%IX0.1` |
+| E-Stop | Mushroom head | NC, maintained | `%IX0.2` |
+| Overload (OL) | Thermal overload aux | NC | `%IX0.3` |
+| Motor | Contactor coil | Output | `%QX0.0` |
+| Run indicator | Pilot light | Output | `%QX0.1` |
+
+## Logic explanation
+
+The heart of the circuit is the **seal-in (latch)**. A normally-open auxiliary
+contact of the motor output is wired in parallel with the Start button. The
+control behaves like this:
+
+- **Start (NO, momentary).** Pressing Start completes the rung and energizes the
+  motor coil — but only for as long as the button is held, on its own.
+- **Seal-in contact.** The instant the motor energizes, its parallel NO contact
+  closes and keeps the rung true after Start is released. The output "seals
+  itself in." This is why a momentary button gives continuous run.
+- **Stop (NC, momentary).** Wired in series. Pressing it breaks the rung, the
+  coil drops out, the seal-in contact opens, and the motor stays off until Start
+  is pressed again.
+
+Two protective devices sit ahead of the start/stop logic, both wired **normally
+closed** so the circuit is **fail-safe** — a broken wire, a lost connection, or a
+tripped device all read as "stop," never "run":
+
+- **E-Stop (NC).** Operating it (or any wiring fault) drops the coil immediately
+  and overrides the seal-in.
+- **Overload (NC).** The motor starter's thermal overload relay opens this
+  contact when the motor pulls excessive current for too long, protecting the
+  motor windings from burning out. The PLC sees the trip and de-energizes.
+
+A separate **Run indicator** output mirrors the motor coil so the operator (and
+the screen) gets positive run feedback.
+
+### The rung
+
+```
+| E-Stop   OL      Stop    Start                        Motor |
+|---] [-----] [-----] [-----] [---+-----------------------( )--|
+|                                 |                           |
+|                          Motor  |                           |
+|------------------------------] [+                           |
+```
+
+In boolean terms:
+
+```
+Motor = (Start OR Motor) AND Stop AND E-Stop AND OL
+```
+
+Start **or** the sealed-in Motor contact, **and** all three series interlocks
+healthy, drives the coil.
+
+### Sequence of operation
+
+| Action | Result |
+| --- | --- |
+| Press Start | Motor energizes and seals in; Run light on |
+| Release Start | Motor keeps running (seal-in holds) |
+| Press Stop | Motor stops; stays off |
+| Press E-Stop | Motor stops immediately, overrides everything |
+| Overload trips | Motor stops; will not restart until OL is reset |
+
+A real benefit of doing this in a PLC rather than purely with relays: the seal-in
+is logical, not a physical contact that can weld or chatter, and the same inputs
+can drive interlocks, run-hour counters, and alarms without rewiring.
+
+## Visuals
+
+{/* Add the OpenPLC ladder screenshot and a wiring diagram to
+    /public/projects/motor-start-stop/ then reference them here, e.g.:
+
+![OpenPLC ladder diagram of the seal-in motor circuit](/projects/motor-start-stop/ladder.png)
+![3-wire control + power wiring diagram](/projects/motor-start-stop/wiring.png)
+*/}
+
+> Screenshots and wiring diagram to be added: OpenPLC ladder view, the 3-wire
+> control wiring, and a short clip of the simulator — Start latches the coil,
+> Stop drops it, and E-Stop / overload override the seal-in.
+
+## Skills used
+
+- Ladder logic to IEC 61131-3 conventions
+- 3-wire control and seal-in / latch design
+- Fail-safe interlocking with normally-closed inputs
+- Motor protection (thermal overload integration)
+- Building and testing an I/O address map in OpenPLC

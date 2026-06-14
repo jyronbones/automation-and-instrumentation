@@ -1,0 +1,126 @@
+---
+title: "Conveyor Sequencing & Fault Control"
+summary: "A two-belt conveyor train with a pre-start warning horn, sequenced start/stop so material never lands on a stopped belt, pull-cord E-stops, and zero-speed fault tripping. Sequencing and safety, the way real material-handling runs."
+order: 3
+featured: true
+repo: "https://github.com/jyronbones/openplc-conveyor-sequence"
+skills:
+  - "Sequencing Logic"
+  - "On/Off-Delay Timers (TON/TOF)"
+  - "Pre-start Warning / Safety"
+  - "Zero-speed Fault Detection"
+  - "Interlocking"
+---
+
+## Problem description
+
+Material handling is where sequencing and safety really show up. Picture two belts
+in a flow path: a feed conveyor `CV-101` drops material onto a discharge conveyor
+`CV-102`, which carries it to a stockpile. You can't just switch both motors on at
+once, and you can't start them in any order — get it wrong and material piles onto
+a stationary belt, overloading and burying it.
+
+Conveyors are also among the most dangerous equipment on a mine site, so they don't
+just start: they **warn** first. This project models a small conveyor train the way
+a real one runs — a timed pre-start horn, a proper start/stop **sequence**, line
+**pull-cord** emergency stops, and **zero-speed** fault detection that trips the
+line when a belt that should be moving isn't.
+
+## I/O assignment
+
+| Tag | Device | Type | Address |
+| --- | --- | --- | --- |
+| `Start` | Pushbutton | NO, momentary | `%IX0.0` |
+| `Stop` | Pushbutton | NC, momentary | `%IX0.1` |
+| `Pull-cord` | Lanyard E-stop (full length) | NC | `%IX0.2` |
+| `ZS-101` | `CV-101` zero-speed / motion switch | NO (true = moving) | `%IX0.3` |
+| `ZS-102` | `CV-102` zero-speed / motion switch | NO | `%IX0.4` |
+| `Reset` | Fault reset pushbutton | NO, momentary | `%IX0.5` |
+| `Horn` | Pre-start warning horn | Output | `%QX0.0` |
+| `M-102` | `CV-102` (discharge) motor | Output | `%QX0.1` |
+| `M-101` | `CV-101` (feed) motor | Output | `%QX0.2` |
+
+Timers used: `T_horn` (pre-start warning, ~10 s), `T_seq` (delay between belts,
+~3 s), and `T_zs` (zero-speed trip delay, ~5 s).
+
+## Logic explanation
+
+### The golden rule of conveyor sequencing
+
+Start from the **discharge end and work back**; stop from the **feed end and work
+forward**. That way every belt that receives material is already running, and when
+shutting down each belt gets a chance to run clear before the one feeding it stops.
+
+- **Start order:** `CV-102` (discharge) first → then `CV-101` (feed).
+- **Stop order:** `CV-101` (feed) first → let `CV-102` run to clear → then
+  `CV-102`.
+
+### Start sequence
+
+1. Operator presses `Start` with all safety devices healthy (`Stop` and
+   `Pull-cord` closed, no latched fault).
+2. The **horn** sounds for `T_horn` (~10 s) — *nothing moves yet*. This is the
+   legally important "everyone clear of the belt" warning.
+3. `T_horn` done → start **`M-102`** (discharge belt).
+4. `ZS-102` confirms `CV-102` is actually turning; after a short `T_seq` delay →
+   start **`M-101`** (feed belt). Material now only ever lands on a moving belt.
+
+Each motor seals in (latches) once running, the same pattern as the motor project.
+
+### Stop sequence
+
+Pressing `Stop` drops `M-101` (feed) **immediately** so no new material is added,
+then `M-102` keeps running for a clear-off delay (a TOF / off-delay timer) before
+it stops — clearing whatever is still on the discharge belt.
+
+### Safety — pull-cord and emergency stop
+
+A **pull-cord** runs the full length of the belt so anyone, anywhere along it, can
+trip the line. It's wired **normally closed** and fail-safe: pulling it — or any
+break in the line — instantly drops **both** motors, overriding every timer and
+seal-in. Recovery requires the cord to be reset and the operator to press `Reset`,
+then run the full start sequence again (horn and all).
+
+### Fault handling — zero-speed detection
+
+A running belt can slip, the drive can fail, or the belt can break — and the motor
+contactor will still say "on." A **zero-speed switch** watches actual belt motion:
+
+- If a motor is commanded on but its `ZS` shows no motion for longer than `T_zs`
+  (~5 s), a **fault** latches.
+- A fault trips that belt **and everything upstream of it** (so a stalled `CV-102`
+  also stops `CV-101`, preventing a spill onto a dead belt).
+- The fault stays latched, with the alarm, until the operator presses `Reset`.
+
+### Sequence of operation
+
+| Event | `Horn` | `CV-102` | `CV-101` |
+| --- | --- | --- | --- |
+| Start pressed | On (`T_horn`) | Off | Off |
+| `T_horn` elapsed | Off | Start | Off |
+| `CV-102` proven + `T_seq` | Off | Run | Start |
+| Running steady | Off | Run | Run |
+| Stop pressed | Off | Run (clear-off) | Stop first |
+| Pull-cord / E-stop | Off | Trip | Trip |
+| `CV-102` zero-speed fault | Off | Trip | Trip (upstream) |
+
+## Visuals
+
+{/* Add the OpenPLC ladder screenshot and a flow sketch to
+    /public/projects/conveyor/ then reference them here, e.g.:
+
+![OpenPLC ladder for the conveyor sequence](/projects/conveyor/ladder.png)
+![Two-belt conveyor flow and sensor layout](/projects/conveyor/layout.png)
+*/}
+
+> To be added: OpenPLC ladder view, a layout sketch of the two belts with the
+> horn / pull-cord / zero-speed devices, and a clip of the full start sequence —
+> horn, discharge belt, then feed belt — plus a pull-cord trip.
+
+## Skills used
+
+- Multi-device start/stop sequencing with the correct material-flow order
+- On-delay and off-delay timers (TON / TOF) for warning and clear-off behaviour
+- Pre-start warning and fail-safe pull-cord / E-stop interlocking
+- Zero-speed fault detection with upstream tripping and latched faults
+- Building a coordinated, recoverable line-control routine in OpenPLC
