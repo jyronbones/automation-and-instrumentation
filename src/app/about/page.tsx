@@ -13,17 +13,43 @@ export const metadata: Metadata = {
     "Automation & instrumentation student with a Computer Engineering Technology background, seeking a co-op in controls / instrumentation.",
 };
 
-const skills = [
-  "Ladder Logic (IEC 61131-3)",
-  "PLC Programming",
-  "OpenPLC",
-  "Control Logic",
-  "Seal-in / Latching",
-  "E-Stop & Interlocks",
-  "Process Control",
-  "Reading Schematics",
-  "Troubleshooting",
-  "Instrumentation",
+const skillGroups = [
+  {
+    label: "Automation & controls",
+    skills: [
+      "Ladder Logic (IEC 61131-3)",
+      "PLC Programming",
+      "Allen-Bradley RSLogix / Studio 5000",
+      "OpenPLC",
+      "Control Systems",
+      "Sensor & I/O Interfacing",
+      "Seal-in / Latching",
+      "E-Stop & Interlocks",
+    ],
+  },
+  {
+    label: "Electrical & electronics",
+    skills: [
+      "Circuits & Wiring",
+      "Microcontrollers",
+      "Reading Schematics",
+      "Technical Drawings",
+    ],
+  },
+  {
+    label: "Troubleshooting & software",
+    skills: [
+      "Methodical Fault-Finding",
+      "Hardware / Software Diagnostics",
+      "Python",
+      "C / C++",
+      "SQL",
+    ],
+  },
+  {
+    label: "Licenses & safety",
+    skills: ["WHMIS", "Forklift-Trained", "Class G Licence"],
+  },
 ];
 
 export default function AboutPage() {
@@ -48,37 +74,66 @@ export default function AboutPage() {
             Technology background plus three years of professional technical
             experience gave me a solid foundation in logic, debugging, and
             systems thinking. I&apos;m now focused on applying that to industrial
-            automation and instrumentation — building and simulating real control
-            logic, not just reading about it.
+            automation and instrumentation.
           </p>
         </div>
       </ScrollReveal>
 
-      {/* TODO (Byron): fill in school + program names and the specifics of your
-          three years of experience. Placeholder copy below until then. */}
       <ScrollReveal delay={0.1}>
         <div className="mt-12">
           <h2 className="text-xl font-semibold tracking-tight">Background</h2>
           <ul className="mt-4 space-y-3 text-base leading-relaxed text-muted-foreground">
             <li>
-              <span className="text-foreground">Education —</span> Automation &
-              Instrumentation program{" "}
-              <span className="font-mono text-sm text-muted-foreground/70">
-                [school / program name]
-              </span>
-              , building on a Computer Engineering Technology diploma{" "}
-              <span className="font-mono text-sm text-muted-foreground/70">
-                [school name]
-              </span>
-              .
+              <span className="text-foreground">Education</span>
+              <ul className="mt-3 list-disc space-y-2 pl-5 marker:text-amber/60">
+                <li>
+                  <span className="text-foreground">
+                    Diploma, Automation &amp; Instrumentation Technician
+                  </span>
+                  , St. Lawrence College
+                  <span className="ml-2 rounded border border-amber/30 bg-amber/5 px-1.5 py-0.5 font-mono text-[0.65rem] uppercase tracking-wide text-amber">
+                    in progress
+                  </span>
+                </li>
+                <li>
+                  <span className="text-foreground">
+                    Advanced Diploma, Computer Engineering Technology - Computing Science
+                  </span>
+                  , Algonquin College
+                </li>
+                <li>
+                  <span className="text-foreground">
+                    Bachelor of Science, Biology &amp; Psychology
+                  </span>
+                  , University of Ottawa
+                </li>
+              </ul>
             </li>
             <li>
-              <span className="text-foreground">Experience —</span> Three years of
-              professional technical work{" "}
-              <span className="font-mono text-sm text-muted-foreground/70">
-                [roles / industries / key skills]
-              </span>
-              .
+              <span className="text-foreground">Experience</span>
+              <ul className="mt-3 list-disc space-y-2.5 pl-5 marker:text-amber/60">
+                <li>
+                  <span className="text-foreground">Software Developer</span>,
+                  Warner Bros. Discovery (2023). Diagnosed and resolved critical
+                  production issues across systems and device tiers with methodical
+                  troubleshooting, and built automated checks that raised test
+                  coverage by 70%.
+                </li>
+                <li>
+                  <span className="text-foreground">Data Engineer</span>, Lytica
+                  (2022–2023). Built Python tools that automated manual data
+                  processes end to end, and tuned SQL performance for reliability
+                  and throughput.
+                </li>
+                <li>
+                  <span className="text-foreground">
+                    Customer Service Representative
+                  </span>
+                  , LCBO (2007–2020). 13 years of dependable service, frequently
+                  acting as manager and training staff; forklift-trained with a
+                  strong safety-and-procedure focus.
+                </li>
+              </ul>
             </li>
             <li>
               <span className="text-foreground">Industry interest —</span> Mining
@@ -92,9 +147,18 @@ export default function AboutPage() {
       <ScrollReveal delay={0.15}>
         <div className="mt-12">
           <h2 className="text-xl font-semibold tracking-tight">Skills</h2>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {skills.map((skill) => (
-              <SkillPill key={skill}>{skill}</SkillPill>
+          <div className="mt-5 space-y-5">
+            {skillGroups.map((group) => (
+              <div key={group.label}>
+                <p className="mb-2.5 font-mono text-xs uppercase tracking-widest text-amber">
+                  {group.label}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {group.skills.map((skill) => (
+                    <SkillPill key={skill}>{skill}</SkillPill>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
