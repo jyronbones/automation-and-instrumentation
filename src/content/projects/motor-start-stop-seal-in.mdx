@@ -1,6 +1,6 @@
 ---
 title: "Motor Start/Stop Control System (Ladder Logic)"
-summary: "A 3-wire latching motor control with seal-in, fail-safe E-stop, and thermal-overload protection — built and simulated in OpenPLC. The single most common control circuit in industry."
+summary: "A 3-wire latching motor control: seal-in, fail-safe E-stop, and a latched overload fault with Run/Fault indicators and manual reset — built and simulated in OpenPLC. The single most common control circuit in industry."
 order: 1
 featured: true
 repo: "https://github.com/jyronbones/openplc-motor-start-stop"
@@ -8,7 +8,8 @@ skills:
   - "Ladder Logic (IEC 61131-3)"
   - "3-Wire / Seal-in Control"
   - "Fail-safe E-Stop"
-  - "Motor Overload Protection"
+  - "Overload Fault Latching"
+  - "HMI Status Indication"
   - "OpenPLC Simulation"
 ---
 
@@ -34,8 +35,10 @@ patterns — latching, fail-safe interlocks, and sequencing.
 | Stop | Pushbutton | NC, momentary | `%IX0.1` |
 | E-Stop | Mushroom head | NC, maintained | `%IX0.2` |
 | Overload (OL) | Thermal overload aux | NC | `%IX0.3` |
+| Reset | Pushbutton | NO, momentary | `%IX0.4` |
 | Motor | Contactor coil | Output | `%QX0.0` |
-| Run indicator | Pilot light | Output | `%QX0.1` |
+| Run light | Pilot light | Output | `%QX0.1` |
+| Fault light | Pilot light | Output | `%QX0.2` |
 
 ## Logic explanation
 
@@ -52,37 +55,95 @@ control behaves like this:
   coil drops out, the seal-in contact opens, and the motor stays off until Start
   is pressed again.
 
-Two protective devices sit ahead of the start/stop logic, both wired **normally
-closed** so the circuit is **fail-safe** — a broken wire, a lost connection, or a
-tripped device all read as "stop," never "run":
+The safety interlocks sit ahead of the start/stop logic, wired **normally closed**
+so the circuit is **fail-safe** — a broken wire, a lost connection, or a tripped
+device all read as "stop," never "run":
 
 - **E-Stop (NC).** Operating it (or any wiring fault) drops the coil immediately
-  and overrides the seal-in.
-- **Overload (NC).** The motor starter's thermal overload relay opens this
-  contact when the motor pulls excessive current for too long, protecting the
-  motor windings from burning out. The PLC sees the trip and de-energizes.
+  and overrides the seal-in. It isn't latched — once released, the line is ready
+  to start again.
+- **Stop (NC).** Breaks the rung for a normal controlled stop.
 
-A separate **Run indicator** output mirrors the motor coil so the operator (and
-the screen) gets positive run feedback.
+### Overload fault latching
 
-### The rung
+The overload gets one extra layer. Instead of de-energizing only while the trip is
+present, it **sets a latched fault**:
+
+- When the thermal overload trips, a **Fault** memory bit latches on.
+- The fault holds the motor down *and* lights a dedicated **Fault** indicator.
+- It does **not** clear on its own when the overcurrent goes away — the motor will
+  not silently restart. The operator must clear the cause and press **Reset**, and
+  Reset only takes effect once the overload has actually cleared.
+
+This "trip → latch → require manual reset" pattern is standard industrial practice:
+a fault should demand a human acknowledgement, not vanish on its own.
+
+A **Run** indicator mirrors the motor coil and a **Fault** indicator mirrors the
+fault bit — a simplified operator HMI.
+
+### The logic (five rungs)
+
+The finished OpenPLC program is five rungs: control, run indication, fault memory,
+reset, and fault indication.
+
+**Rung 1 — motor seal-in.** Four normally-closed interlocks (E-Stop, Fault,
+Overload, Stop) in series, then Start in parallel with the Motor seal contact:
 
 ```
-  E-Stop  OL   Stop     Start           Motor
-|---] [---] [---] [--+---] [---+--------( )-------|
-|                    |         |                  |
-|                    |  Motor  |                  |
-|                    +---] [---+                  |
+  E-Stop Fault  OL   Stop       Start         Motor
+|--]/[---]/[---]/[----]/[----+---] [---+--------( )------|
+|                            |         |                 |
+|                            |  Motor  |                 |
+|                            +---] [---+                 |
+```
+
+**Rung 2 — run light.** Mirrors the motor output:
+
+```
+  Motor                            Run light
+|--] [-----------------------------( )-----------------|
+```
+
+**Rung 3 — fault latch.** An overload sets the Fault bit, which seals itself in:
+
+```
+  Overload                         Fault
+|--] [------+----------------------( )-----------------|
+|           |                                          |
+|  Fault    |                                          |
+|--] [------+                                          |
+```
+
+**Rung 4 — fault reset.** A reset coil: pressing Reset clears the Fault bit. If
+the overload is still present, Rung 3 simply re-latches it on the next scan:
+
+```
+  Reset                            Fault
+|--] [-----------------------------(R)-----------------|
+```
+
+**Rung 5 — fault light.** Mirrors the Fault bit:
+
+```
+  Fault                            Fault light
+|--] [-----------------------------( )-----------------|
 ```
 
 In boolean terms:
 
 ```
-Motor = (Start OR Motor) AND Stop AND E-Stop AND OL
+Motor      = (Start OR Motor) AND NOT E-Stop AND NOT Fault AND NOT Overload AND NOT Stop
+Fault      = Overload OR Fault                  ' latched (seal-in)
+Fault      -> reset (R) on Reset                ' re-latches via R3 if still overloaded
+RunLight   = Motor
+FaultLight = Fault
 ```
 
-Start **or** the sealed-in Motor contact, **and** all three series interlocks
-healthy, drives the coil.
+The Overload appears twice on purpose: directly in Rung 1 for an immediate stop,
+and in Rung 3 to latch the fault so the motor can't restart until it's cleared and
+Reset is pressed. Rung 4's `(R)` just resets the Fault bit — and because Rung 3
+seals itself in, the fault re-latches on the next scan if the overcurrent is still
+present, so Reset only takes hold once the overload has actually cleared.
 
 ### Sequence of operation
 
@@ -90,9 +151,11 @@ healthy, drives the coil.
 | --- | --- |
 | Press Start | Motor energizes and seals in; Run light on |
 | Release Start | Motor keeps running (seal-in holds) |
-| Press Stop | Motor stops; stays off |
-| Press E-Stop | Motor stops immediately, overrides everything |
-| Overload trips | Motor stops; will not restart until OL is reset |
+| Press Stop | Motor stops; ready to restart |
+| Press E-Stop | Motor stops immediately; ready once released |
+| Overload trips | Motor stops; Fault latches; Fault light on |
+| Press Reset (overload cleared) | Fault clears; ready to restart |
+| Press Reset (still overloaded) | Fault re-latches; clears only once OL is gone |
 
 A real benefit of doing this in a PLC rather than purely with relays: the seal-in
 is logical, not a physical contact that can weld or chatter, and the same inputs
@@ -102,12 +165,15 @@ can drive interlocks, run-hour counters, and alarms without rewiring.
 
 A JavaScript twin of the ladder logic above, running on a ~100 ms scan loop — the
 same **read inputs → solve logic → write outputs** cycle a real PLC uses. Hold
-**Start** and release it: the seal-in keeps the motor running. **Stop**, **E-Stop**,
-or an **Overload** trip each drop the coil. (This is a faithful re-implementation
-of the logic for the browser — the actual ladder runs in OpenPLC; the export is in
-the repo.)
+**Start** and release it: the seal-in keeps the motor running. **Stop** and
+**E-Stop** drop the coil. Trip the **Overload** to latch a fault and light the
+**Fault** lamp — then clear it and press **Reset** to restart. (A faithful
+re-implementation for the browser — the actual ladder runs in OpenPLC; the export
+is in the repo.)
 
 <MotorSim />
+
+<MotorScenarios />
 
 ## Visuals
 
@@ -127,5 +193,6 @@ the repo.)
 - Ladder logic to IEC 61131-3 conventions
 - 3-wire control and seal-in / latch design
 - Fail-safe interlocking with normally-closed inputs
-- Motor protection (thermal overload integration)
+- Overload fault latching with manual reset (no auto-restart)
+- HMI-style status indication (Run / Fault lights)
 - Building and testing an I/O address map in OpenPLC

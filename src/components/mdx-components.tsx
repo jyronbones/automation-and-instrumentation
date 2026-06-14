@@ -3,6 +3,7 @@ import type { MDXComponents } from "mdx/types";
 import { MotorSim } from "@/components/plc/motor-sim";
 import { TankSim } from "@/components/plc/tank-sim";
 import { ConveyorSim } from "@/components/plc/conveyor-sim";
+import { MotorScenarios } from "@/components/plc/motor-scenarios";
 
 /** Styling map for MDX project bodies — keeps the industrial tone. */
 export const mdxComponents: MDXComponents = {
@@ -10,6 +11,7 @@ export const mdxComponents: MDXComponents = {
   MotorSim,
   TankSim,
   ConveyorSim,
+  MotorScenarios,
 
   h2: (props) => (
     <h2

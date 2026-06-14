@@ -16,41 +16,64 @@ interface Inputs {
   startPb: boolean; // NO pushbutton — held
   stopPb: boolean; // NC pushbutton — held (operating it breaks the rung)
   estop: boolean; // NC mushroom — latched when operated
-  overload: boolean; // NC overload aux — latched when tripped
+  overload: boolean; // overcurrent condition present (OL relay tripped)
+  reset: boolean; // NO momentary — clears a latched fault
 }
 
 /* Persistent PLC memory between scans. */
 interface State {
   motor: boolean; // the sealed-in coil
+  fault: boolean; // latched overload fault memory
 }
 
 interface Outputs {
   motor: boolean;
   run: boolean;
+  fault: boolean;
 }
 
 /*
- * The control logic — a direct twin of the ladder:
- *   Motor = (Start OR Motor) AND Stop AND E-Stop AND OL
- * NC field devices read TRUE (closed) when healthy, so operating one (pressing
- * Stop / E-Stop, or an overload trip) makes its term FALSE and drops the coil.
+ * Mirrors the five-rung OpenPLC program:
+ *   R1  Motor = (Start OR Motor) AND NOT E-Stop AND NOT Fault AND NOT Stop AND NOT Overload
+ *   R2  RunLight   = Motor
+ *   R3  Fault      = Overload OR Fault                            ' latch / seal-in
+ *   R4  Fault      := 0 when Reset                            ' (R) reset coil
+ *   R5  FaultLight = Fault
+ *
+ * The motor rung carries both the live Overload contact (immediate stop) and the
+ * latched Fault bit (no restart until reset). Stop / E-Stop are direct interlocks.
  */
 const scan: ScanFn<Inputs, State, Outputs> = ({ inputs, state }) => {
   const stopOk = !inputs.stopPb; // NC: closed unless pressed
   const estopOk = !inputs.estop; // NC: closed unless operated
-  const olOk = !inputs.overload; // NC: closed unless tripped
+  const olOk = !inputs.overload; // NC: closed unless overloaded
 
-  const motor = (inputs.startPb || state.motor) && stopOk && estopOk && olOk;
+  // R3 sets/seals the fault; R4 is a reset coil on Reset. Because R3 seals in,
+  // the fault re-latches next scan if the overload is still present — so Reset
+  // only "sticks" once the overcurrent has actually cleared.
+  let fault = state.fault;
+  if (inputs.overload) fault = true; // R3: set / seal-in
+  if (inputs.reset) fault = false; // R4: (R) reset coil
 
-  return { state: { motor }, outputs: { motor, run: motor } };
+  // R1 seal-in: Start (or sealed Motor) with every interlock healthy.
+  const motor =
+    (inputs.startPb || state.motor) && estopOk && !fault && stopOk && olOk;
+
+  return { state: { motor, fault }, outputs: { motor, run: motor, fault } };
 };
 
 export function MotorSim() {
   const { inputs, outputs, setInput } = usePlc<Inputs, State, Outputs>({
     scan,
-    initialInputs: { startPb: false, stopPb: false, estop: false, overload: false },
-    initialState: { motor: false },
-    initialOutputs: { motor: false, run: false },
+    initialInputs: {
+      startPb: false,
+      stopPb: false,
+      estop: false,
+      overload: false,
+      reset: false,
+    },
+    initialState: { motor: false, fault: false },
+    initialOutputs: { motor: false, run: false, fault: false },
   });
 
   return (
@@ -65,6 +88,7 @@ export function MotorSim() {
           <div className="flex gap-6">
             <Lamp on={outputs.motor} label="Motor" color="amber" />
             <Lamp on={outputs.run} label="Run" color="green" />
+            <Lamp on={outputs.fault} label="Fault" color="red" />
           </div>
         </div>
 
@@ -86,6 +110,13 @@ export function MotorSim() {
                 pressed={inputs.stopPb}
                 onPress={(d) => setInput("stopPb", d)}
               />
+              <MomentaryButton
+                label="Reset"
+                sublabel="clear fault"
+                variant="neutral"
+                pressed={inputs.reset}
+                onPress={(d) => setInput("reset", d)}
+              />
             </div>
           </ControlGroup>
 
@@ -100,7 +131,7 @@ export function MotorSim() {
               />
               <ToggleButton
                 label={inputs.overload ? "OL Tripped" : "Overload"}
-                sublabel="trip / reset"
+                sublabel="overcurrent"
                 variant="fault"
                 active={inputs.overload}
                 onToggle={(v) => setInput("overload", v)}
@@ -118,17 +149,20 @@ export function MotorSim() {
           { addr: "%IX0.1", tag: "Stop", value: !inputs.stopPb, kind: "NC" },
           { addr: "%IX0.2", tag: "E-Stop", value: !inputs.estop, kind: "NC" },
           { addr: "%IX0.3", tag: "Overload", value: !inputs.overload, kind: "NC" },
+          { addr: "%IX0.4", tag: "Reset", value: inputs.reset },
         ]}
         outputs={[
           { addr: "%QX0.0", tag: "Motor", value: outputs.motor },
           { addr: "%QX0.1", tag: "Run light", value: outputs.run },
+          { addr: "%QX0.2", tag: "Fault light", value: outputs.fault },
         ]}
       />
 
       <p className="mt-4 font-mono text-[0.7rem] leading-relaxed text-muted-foreground">
-        NC inputs read <span className="text-emerald-300">1</span> when healthy;
-        operating the device (or a fault) drives them to{" "}
-        <span className="text-muted-foreground">0</span> — fail-safe by design.
+        NC inputs read <span className="text-emerald-300">1</span> when healthy. An
+        overload <span className="text-red-300">latches</span> the fault — the motor
+        stays down and won&apos;t restart until the overload clears and you press{" "}
+        <span className="text-amber">Reset</span>.
       </p>
     </PlcPanel>
   );
