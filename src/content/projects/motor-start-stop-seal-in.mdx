@@ -24,8 +24,7 @@ overload** when it's drawing too much current.
 
 This is the classic **3-wire control circuit**, and it's the foundation everything
 else is built on. I implemented it in ladder logic and verified its behaviour in
-the OpenPLC simulator. The tank-level and conveyor projects extend the same
-patterns — latching, fail-safe interlocks, and sequencing.
+the OpenPLC simulator.
 
 ## I/O assignment
 
@@ -34,7 +33,7 @@ patterns — latching, fail-safe interlocks, and sequencing.
 | Start | Pushbutton | NO, momentary | `%IX0.0` |
 | Stop | Pushbutton | NC, momentary | `%IX0.1` |
 | E-Stop | Mushroom head | NC, maintained | `%IX0.2` |
-| Overload (OL) | Thermal overload aux | NC | `%IX0.3` |
+| Overload (OL) | Thermal overload aux | NC, maintained | `%IX0.3` |
 | Reset | Pushbutton | NO, momentary | `%IX0.4` |
 | Motor | Contactor coil | Output | `%QX0.0` |
 | Run light | Pilot light | Output | `%QX0.1` |
@@ -163,13 +162,13 @@ can drive interlocks, run-hour counters, and alarms without rewiring.
 
 ## Live simulation
 
-A JavaScript twin of the ladder logic above, running on a ~100 ms scan loop — the
-same **read inputs → solve logic → write outputs** cycle a real PLC uses. Hold
+A JavaScript twin of the ladder logic above, running on a ~50 ms scan loop with
+the same **read inputs → solve logic → write outputs** cycle a real PLC uses. Hold
 **Start** and release it: the seal-in keeps the motor running. **Stop** and
 **E-Stop** drop the coil. Trip the **Overload** to latch a fault and light the
-**Fault** lamp — then clear it and press **Reset** to restart. (A faithful
-re-implementation for the browser — the actual ladder runs in OpenPLC; the export
-is in the repo.)
+**Fault** lamp, then clear it and press **Reset** to restart. (A faithful
+re-implementation for the browser; the actual ladder runs in OpenPLC, with the
+export in the repo.)
 
 <MotorSim />
 

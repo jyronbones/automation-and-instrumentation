@@ -18,7 +18,7 @@ export interface UsePlcOptions<I, S, O> {
   initialInputs: I;
   initialState: S;
   initialOutputs: O;
-  /** Scan-cycle period in ms (default 100 — a realistic PLC scan time). */
+  /** Scan-cycle period in ms (default 50 — OpenPLC's default cycle time). */
   intervalMs?: number;
 }
 
@@ -40,7 +40,7 @@ export function usePlc<I, S, O>({
   initialInputs,
   initialState,
   initialOutputs,
-  intervalMs = 100,
+  intervalMs = 50,
 }: UsePlcOptions<I, S, O>): UsePlcResult<I, S, O> {
   const [inputs, setInputs] = useState<I>(initialInputs);
   const [outputs, setOutputs] = useState<O>(initialOutputs);

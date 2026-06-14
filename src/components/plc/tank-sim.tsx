@@ -108,7 +108,7 @@ export function TankSim() {
       : "Idle";
 
   return (
-    <PlcPanel title="Tank Level Control — live" subtitle="JavaScript twin · ~100 ms scan cycle">
+    <PlcPanel title="Tank Level Control — live" subtitle="JavaScript twin · ~50 ms scan cycle">
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
         <Tank
           level={outputs.level}

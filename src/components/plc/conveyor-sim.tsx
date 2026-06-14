@@ -205,7 +205,7 @@ export function ConveyorSim() {
   return (
     <PlcPanel
       title="Conveyor Sequencing — live"
-      subtitle="JavaScript twin · ~100 ms scan cycle"
+      subtitle="JavaScript twin · ~50 ms scan cycle"
     >
       {/* Status banner */}
       <div

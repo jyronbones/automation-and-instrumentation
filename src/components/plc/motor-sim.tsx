@@ -79,7 +79,7 @@ export function MotorSim() {
   return (
     <PlcPanel
       title="Motor Start/Stop — live"
-      subtitle="JavaScript twin · ~100 ms scan cycle"
+      subtitle="JavaScript twin · ~50 ms scan cycle"
     >
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
         {/* Motor + indicators */}
@@ -98,21 +98,18 @@ export function MotorSim() {
             <div className="flex flex-wrap gap-3">
               <MomentaryButton
                 label="Start"
-                sublabel="NO"
                 variant="start"
                 pressed={inputs.startPb}
                 onPress={(d) => setInput("startPb", d)}
               />
               <MomentaryButton
                 label="Stop"
-                sublabel="NC"
                 variant="stop"
                 pressed={inputs.stopPb}
                 onPress={(d) => setInput("stopPb", d)}
               />
               <MomentaryButton
                 label="Reset"
-                sublabel="clear fault"
                 variant="neutral"
                 pressed={inputs.reset}
                 onPress={(d) => setInput("reset", d)}
@@ -124,14 +121,12 @@ export function MotorSim() {
             <div className="flex flex-wrap gap-3">
               <ToggleButton
                 label={inputs.estop ? "E-Stop ✓" : "E-Stop"}
-                sublabel="press / reset"
                 variant="estop"
                 active={inputs.estop}
                 onToggle={(v) => setInput("estop", v)}
               />
               <ToggleButton
                 label={inputs.overload ? "OL Tripped" : "Overload"}
-                sublabel="overcurrent"
                 variant="fault"
                 active={inputs.overload}
                 onToggle={(v) => setInput("overload", v)}
@@ -145,11 +140,11 @@ export function MotorSim() {
 
       <IOTable
         inputs={[
-          { addr: "%IX0.0", tag: "Start", value: inputs.startPb },
+          { addr: "%IX0.0", tag: "Start", value: inputs.startPb, kind: "NO" },
           { addr: "%IX0.1", tag: "Stop", value: !inputs.stopPb, kind: "NC" },
           { addr: "%IX0.2", tag: "E-Stop", value: !inputs.estop, kind: "NC" },
           { addr: "%IX0.3", tag: "Overload", value: !inputs.overload, kind: "NC" },
-          { addr: "%IX0.4", tag: "Reset", value: inputs.reset },
+          { addr: "%IX0.4", tag: "Reset", value: inputs.reset, kind: "NO" },
         ]}
         outputs={[
           { addr: "%QX0.0", tag: "Motor", value: outputs.motor },
@@ -159,9 +154,11 @@ export function MotorSim() {
       />
 
       <p className="mt-4 font-mono text-[0.7rem] leading-relaxed text-muted-foreground">
-        NC inputs read <span className="text-emerald-300">1</span> when healthy. An
-        overload <span className="text-red-300">latches</span> the fault — the motor
-        stays down and won&apos;t restart until the overload clears and you press{" "}
+        NC inputs read <span className="text-emerald-300">1</span>{" "}
+        when healthy. An overload{" "}
+        <span className="text-red-300">latches</span>{" "}
+        the fault, so the motor stays down and won&apos;t restart until the
+        overload clears and you press{" "}
         <span className="text-amber">Reset</span>.
       </p>
     </PlcPanel>

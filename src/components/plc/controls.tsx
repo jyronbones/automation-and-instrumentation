@@ -1,7 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+
+/**
+ * Minimum time (ms) a momentary press is held true, so a fast click can't slip
+ * between scan cycles and be missed — a software debounce / minimum pulse width.
+ */
+const MIN_PULSE_MS = 140;
 
 /* ------------------------------------------------------------------ *
  * Industrial control-panel UI kit. Shared by every project simulator. *
@@ -99,25 +105,50 @@ export function MomentaryButton({
   pressed: boolean;
   onPress: (down: boolean) => void;
 }) {
+  const downAt = useRef(0);
+  const releaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setPressed = (down: boolean) => {
+    if (down) {
+      if (releaseTimer.current) {
+        clearTimeout(releaseTimer.current);
+        releaseTimer.current = null;
+      }
+      downAt.current = Date.now();
+      onPress(true);
+    } else {
+      const held = Date.now() - downAt.current;
+      if (held >= MIN_PULSE_MS) {
+        onPress(false);
+      } else {
+        // Held too briefly — keep it true until at least one scan can catch it.
+        releaseTimer.current = setTimeout(() => {
+          onPress(false);
+          releaseTimer.current = null;
+        }, MIN_PULSE_MS - held);
+      }
+    }
+  };
+
   return (
     <button
       type="button"
       aria-pressed={pressed}
       onPointerDown={(e) => {
         e.preventDefault();
-        onPress(true);
+        setPressed(true);
       }}
-      onPointerUp={() => onPress(false)}
-      onPointerLeave={() => onPress(false)}
-      onPointerCancel={() => onPress(false)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
       onKeyDown={(e) => {
         if (e.key === " " || e.key === "Enter") {
           e.preventDefault();
-          onPress(true);
+          setPressed(true);
         }
       }}
       onKeyUp={(e) => {
-        if (e.key === " " || e.key === "Enter") onPress(false);
+        if (e.key === " " || e.key === "Enter") setPressed(false);
       }}
       className={cn(
         "flex min-w-24 select-none flex-col items-center justify-center rounded-lg border px-4 py-3 font-mono text-sm transition-all active:translate-y-px",
