@@ -175,18 +175,26 @@ is in the repo.)
 
 <MotorScenarios />
 
-## Visuals
+## Wiring & demo
 
-{/* Add the OpenPLC ladder screenshot and a wiring diagram to
-    /public/projects/motor-start-stop/ then reference them here, e.g.:
+### I/O wiring diagram
 
-![OpenPLC ladder diagram of the seal-in motor circuit](/projects/motor-start-stop/ladder.png)
-![3-wire control + power wiring diagram](/projects/motor-start-stop/wiring.png)
-*/}
+How the program maps to real hardware — field devices wired to the PLC inputs, and
+the PLC outputs driving the contactor coil and indicator lamps. The power side
+shows what the PLC is really commanding: the contactor (`M`) and overload (`OL`)
+switching three-phase power to the motor.
 
-> Screenshots and wiring diagram to be added: OpenPLC ladder view, the 3-wire
-> control wiring, and a short clip of the simulator — Start latches the coil,
-> Stop drops it, and E-Stop / overload override the seal-in.
+<WiringDiagram />
+
+### Simulator demo
+
+A short clip of the program running in the OpenPLC runtime — toggling the inputs
+and watching the motor, run light, and fault behave.
+
+<video controls preload="metadata" className="mt-4 w-full rounded-lg border border-border">
+  <source src="/projects/motor-start-stop/motor-openplc-demo.mp4" type="video/mp4" />
+  Your browser doesn’t support embedded video.
+</video>
 
 ## Skills used
 
