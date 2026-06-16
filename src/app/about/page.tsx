@@ -166,28 +166,40 @@ export default function AboutPage() {
 
       <ScrollReveal delay={0.2}>
         <div className="mt-12 rounded-lg border border-border bg-card p-6">
-          <h2 className="text-xl font-semibold tracking-tight">Résumé</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold tracking-tight">Résumé</h2>
+            <span className="rounded border border-border bg-secondary/50 px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-wide text-muted-foreground">
+              Coming soon
+            </span>
+          </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             The full breakdown of my education, experience, and skills.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <a
-              href="/resume.pdf"
-              target="_blank"
-              rel="noreferrer"
-              className={cn(buttonVariants({ size: "lg" }))}
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "cursor-not-allowed opacity-50",
+              )}
             >
               <FileText className="size-4" />
               View résumé
-            </a>
-            <a
-              href="/resume.pdf"
-              download
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+            </button>
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "cursor-not-allowed opacity-50",
+              )}
             >
               <Download className="size-4" />
               Download
-            </a>
+            </button>
           </div>
         </div>
       </ScrollReveal>

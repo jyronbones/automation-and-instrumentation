@@ -16,8 +16,8 @@ export function StatusDot({
       )}
     >
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-amber" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
       </span>
       {label}
     </span>

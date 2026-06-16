@@ -33,7 +33,11 @@ export default function ContactPage() {
   return (
     <Section className="max-w-3xl pt-16 md:pt-20">
       <ScrollReveal>
-        {site.availableForCoop && <StatusDot />}
+        {site.availableForCoop && (
+          <div className="mb-6">
+            <StatusDot />
+          </div>
+        )}
         <SectionLabel>Contact</SectionLabel>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
           Get in touch
