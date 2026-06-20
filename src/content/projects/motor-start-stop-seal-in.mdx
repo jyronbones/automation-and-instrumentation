@@ -1,6 +1,6 @@
 ---
 title: "Motor Start/Stop Control System (Ladder Logic)"
-summary: "A 3-wire latching motor control: seal-in, fail-safe E-stop, and a latched overload fault with Run/Fault indicators and manual reset — built and simulated in OpenPLC. The single most common control circuit in industry."
+summary: "A three-wire latching motor control with seal-in, a fail-safe E-stop, and a latched overload fault with Run and Fault indicators and manual reset."
 order: 1
 featured: true
 repo: "https://github.com/jyronbones/openplc-motor-start-stop"
@@ -15,16 +15,13 @@ skills:
 
 ## Problem description
 
-Nearly every powered asset in a plant — a pump, fan, conveyor, crusher, agitator —
-starts the same way: a momentary **Start** button energizes the motor, a momentary
-**Stop** button de-energizes it, and the motor keeps running after the operator
-lets go of Start. Layered on top of that are the things that must be able to stop
-the motor no matter what: an **emergency stop**, and the motor's own **thermal
-overload** when it's drawing too much current.
+A momentary **Start** button energizes the motor, a momentary **Stop** button
+de-energizes it, and the motor keeps running after the operator releases Start. On
+top of that, an **emergency stop** and the motor's **thermal overload** must be
+able to stop it at any time.
 
-This is the classic **3-wire control circuit**, and it's the foundation everything
-else is built on. I implemented it in ladder logic and verified its behaviour in
-the OpenPLC simulator.
+This is the standard **3-wire control circuit**, implemented in ladder logic and
+verified in the OpenPLC simulator.
 
 ## I/O assignment
 

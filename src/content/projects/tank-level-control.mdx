@@ -1,6 +1,6 @@
 ---
 title: "Tank Level Control System"
-summary: "Two-point (hysteresis) pump control that keeps a process tank between low and high setpoints, with a Hand-Off-Auto selector and a latched high-high overflow alarm. The bread-and-butter of process control."
+summary: "Two-point hysteresis pump control that holds a process tank between low and high setpoints, with a Hand-Off-Auto selector and a latched high-high overflow alarm."
 order: 2
 featured: true
 repo: "https://github.com/jyronbones/openplc-tank-level"
@@ -14,21 +14,17 @@ skills:
 
 ## Problem description
 
-Mines and process plants run on tanks — slurry tanks, water and reagent storage,
-thickener feed, dewatering sumps. Almost all of them need the same thing: keep the
-level inside a band, run a pump to do it, and raise an alarm before anything
-overflows.
+The task is to keep a tank's level inside a band, run a pump to do it, and raise
+an alarm before it overflows.
 
-The naïve approach — "turn the pump on when the level is low, off when it's high"
-using a single setpoint — fails in practice because the pump **short-cycles**:
-right at the setpoint it rapidly switches on and off, which wears out the motor,
-the contactor, and the pump itself. The fix is a **deadband (hysteresis)** between
-two setpoints, and that's what this project implements. On top of the automatic
-control it adds an operator **Hand-Off-Auto** selector and a **fail-safe overflow
+A single setpoint makes the pump **short-cycle** at the threshold, switching on
+and off rapidly and wearing out the motor, contactor, and pump. The fix is a
+**deadband (hysteresis)** between two setpoints. On top of the automatic control,
+the project adds an operator **Hand-Off-Auto** selector and a **fail-safe overflow
 alarm**.
 
-This scenario is a *fill* tank: a pump draws from a source and fills the tank, and
-the control holds the level between a low and a high float.
+This is a *fill* tank: a pump draws from a source and holds the level between a
+low and a high float.
 
 ## I/O assignment
 

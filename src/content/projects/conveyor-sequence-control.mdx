@@ -1,6 +1,6 @@
 ---
 title: "Conveyor Sequencing & Fault Control"
-summary: "A two-belt conveyor train with a pre-start warning horn, sequenced start/stop so material never lands on a stopped belt, pull-cord E-stops, and zero-speed fault tripping. Sequencing and safety, the way real material-handling runs."
+summary: "A two-belt conveyor train with a pre-start warning horn, sequenced start/stop so material never lands on a stopped belt, pull-cord E-stops, and zero-speed fault tripping."
 order: 3
 featured: true
 repo: "https://github.com/jyronbones/openplc-conveyor-sequence"
@@ -14,17 +14,16 @@ skills:
 
 ## Problem description
 
-Material handling is where sequencing and safety really show up. Picture two belts
-in a flow path: a feed conveyor `CV-101` drops material onto a discharge conveyor
-`CV-102`, which carries it to a stockpile. You can't just switch both motors on at
-once, and you can't start them in any order — get it wrong and material piles onto
-a stationary belt, overloading and burying it.
+A feed conveyor `CV-101` drops material onto a discharge conveyor `CV-102`, which
+carries it to a stockpile. The motors can't start at once or in any order: start
+the feed belt first and material piles onto a stationary discharge belt,
+overloading and burying it.
 
-Conveyors are also among the most dangerous equipment on a mine site, so they don't
-just start: they **warn** first. This project models a small conveyor train the way
-a real one runs — a timed pre-start horn, a proper start/stop **sequence**, line
-**pull-cord** emergency stops, and **zero-speed** fault detection that trips the
-line when a belt that should be moving isn't.
+Conveyors are also among the most dangerous equipment on site, so they **warn**
+before they start. This project models a small conveyor train with a timed
+pre-start horn, a start/stop **sequence**, **pull-cord** emergency stops, and
+**zero-speed** fault detection that trips the line when a belt that should be
+moving isn't.
 
 ## I/O assignment
 
