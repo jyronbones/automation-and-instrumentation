@@ -70,11 +70,11 @@ export default function AboutPage() {
         <div className="mt-8 space-y-4 text-base leading-relaxed text-muted-foreground">
           <p>{site.tagline}</p>
           <p>
-            My path into controls runs through software: a Computer Engineering
-            Technology background plus three years of professional technical
-            experience gave me a solid foundation in logic, debugging, and
-            systems thinking. I&apos;m now focused on applying that to industrial
-            automation and instrumentation.
+            The projects here implement core industrial control patterns as
+            ladder logic (IEC 61131-3), built and simulated in OpenPLC — motor
+            start/stop control, tank level regulation, and conveyor sequencing —
+            with a focus on safety interlocks, fault handling, and reliable
+            operation.
           </p>
         </div>
       </ScrollReveal>
