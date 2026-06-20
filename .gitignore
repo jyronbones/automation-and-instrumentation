@@ -110,3 +110,10 @@ $RECYCLE.BIN/
 *.swo
 *.bak
 *.tmp
+
+.vercel
+
+# local tooling config (not part of the project)
+/.claude
+/CLAUDE.md
+/AGENTS.md
