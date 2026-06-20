@@ -2,14 +2,13 @@
 
 export const site = {
   name: "Byron Jones",
-  subtitle: "Instrumentation & Automation | Controls & PLC Programming",
+  subtitle: "Industrial Automation | Controls & PLC Programming",
   tagline:
-    "Automation and instrumentation student with a Computer Engineering Technology background and three years of professional technical experience. Comfortable with control logic, troubleshooting, and reading schematics. Seeking an automation and instrumentation co-op.",
+    "Industrial automation and controls projects — PLC programming, control logic, and process instrumentation, built and simulated in OpenPLC. Backed by a Computer Engineering Technology background and three years of professional technical experience.",
   location: "Carleton Place, Ontario, Canada",
   github: "https://github.com/jyronbones",
   linkedin: "https://linkedin.com/in/byron-jones89",
-  url: "https://byronjones.vercel.app",
-  availableForCoop: true,
+  url: "https://byronjones-ia.vercel.app",
   // Contact form posts here via AJAX; Formspree forwards to your inbox. The
   // visitor never sees Formspree — just the form and the success message.
   formspreeEndpoint: "https://formspree.io/f/mqeowjvq",

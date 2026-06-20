@@ -10,7 +10,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Automation & instrumentation student with a Computer Engineering Technology background, seeking a co-op in controls / instrumentation.",
+    "Byron Jones — industrial automation and controls projects, with a Computer Engineering Technology background and three years of professional technical experience.",
 };
 
 const skillGroups = [
@@ -86,15 +86,6 @@ export default function AboutPage() {
             <li>
               <span className="text-foreground">Education</span>
               <ul className="mt-3 list-disc space-y-2 pl-5 marker:text-amber/60">
-                <li>
-                  <span className="text-foreground">
-                    Diploma, Automation &amp; Instrumentation Technician
-                  </span>
-                  , St. Lawrence College
-                  <span className="ml-2 rounded border border-amber/30 bg-amber/5 px-1.5 py-0.5 font-mono text-[0.65rem] uppercase tracking-wide text-amber">
-                    in progress
-                  </span>
-                </li>
                 <li>
                   <span className="text-foreground">
                     Advanced Diploma, Computer Engineering Technology - Computing Science

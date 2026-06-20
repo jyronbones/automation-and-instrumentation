@@ -4,7 +4,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Section, SectionLabel } from "@/components/section";
 import { ScrollReveal } from "@/components/scroll-reveal";
-import { StatusDot } from "@/components/status-dot";
 import { ProjectCard } from "@/components/project-card";
 import { getAllProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
@@ -16,14 +15,8 @@ export default function HomePage() {
     <>
       {/* Hero */}
       <Section className="pt-20 md:pt-28">
-        {site.availableForCoop && (
-          <ScrollReveal>
-            <StatusDot />
-          </ScrollReveal>
-        )}
-
         <ScrollReveal delay={0.05}>
-          <h1 className="mt-6 text-balance text-5xl font-semibold tracking-tight md:text-7xl">
+          <h1 className="text-balance text-5xl font-semibold tracking-tight md:text-7xl">
             {site.name}
           </h1>
         </ScrollReveal>

@@ -4,14 +4,13 @@ import { ArrowUpRight } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "@/components/brand-icons";
 import { Section, SectionLabel } from "@/components/section";
 import { ScrollReveal } from "@/components/scroll-reveal";
-import { StatusDot } from "@/components/status-dot";
 import { ContactForm } from "@/components/contact-form";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch with Byron Jones — open to automation & instrumentation co-op opportunities.",
+    "Get in touch with Byron Jones about industrial automation, controls, and PLC work.",
 };
 
 const links = [
@@ -33,19 +32,13 @@ export default function ContactPage() {
   return (
     <Section className="max-w-3xl pt-16 md:pt-20">
       <ScrollReveal>
-        {site.availableForCoop && (
-          <div className="mb-6">
-            <StatusDot />
-          </div>
-        )}
         <SectionLabel>Contact</SectionLabel>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
           Get in touch
         </h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-          I&apos;m seeking an automation &amp; instrumentation co-op placement and
-          happy to talk about controls, PLC work, or opportunities. Send a message
-          below and it comes straight to my inbox.
+          Happy to talk about controls, PLC work, or automation projects. Send a
+          message below and it comes straight to my inbox.
         </p>
       </ScrollReveal>
 
