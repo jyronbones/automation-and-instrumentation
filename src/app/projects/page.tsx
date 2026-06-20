@@ -7,7 +7,7 @@ import { getAllProjects } from "@/lib/projects";
 export const metadata: Metadata = {
   title: "Projects",
   description:
-    "Industrial control logic projects — ladder logic, PLC simulation, and process control.",
+    "Industrial control logic projects: ladder logic, PLC simulation, and process control.",
 };
 
 export default function ProjectsPage() {
@@ -21,9 +21,9 @@ export default function ProjectsPage() {
           Control logic & instrumentation
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-          Hands-on industrial control projects built and simulated with OpenPLC —
-          ladder logic, process control, and sequencing, each documented with the
-          logic, wiring, and skills involved.
+          Control logic, process control, and sequencing projects built and
+          simulated in OpenPLC. Each one documents the logic, wiring, and skills
+          involved.
         </p>
       </ScrollReveal>
 

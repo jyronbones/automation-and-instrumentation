@@ -4,7 +4,7 @@ export const site = {
   name: "Byron Jones",
   subtitle: "Industrial Automation | Controls & PLC Programming",
   tagline:
-    "Industrial automation and controls projects — PLC programming, control logic, and process instrumentation, built and simulated in OpenPLC. Backed by a Computer Engineering Technology background and three years of professional technical experience.",
+    "PLC and control logic projects, built and simulated in OpenPLC.",
   location: "Carleton Place, Ontario, Canada",
   github: "https://github.com/jyronbones",
   linkedin: "https://linkedin.com/in/byron-jones89",
