@@ -9,14 +9,11 @@ export const site = {
   github: "https://github.com/jyronbones",
   linkedin: "https://linkedin.com/in/byron-jones89",
   url: "https://byronjones-ia.vercel.app",
-  // Contact form posts here via AJAX; Formspree forwards to your inbox. The
-  // visitor never sees Formspree — just the form and the success message.
-  formspreeEndpoint: "https://formspree.io/f/mqeowjvq",
+  // Main personal site; About and Contact live there.
+  mainSite: "https://byronjones.vercel.app",
 } as const;
 
 export const nav = [
   { href: "/", label: "Home" },
   { href: "/projects", label: "Projects" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
 ] as const;
