@@ -9,9 +9,10 @@ export function SiteFooter() {
       <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between gap-4 px-6 py-10 sm:flex-row sm:items-center">
         <Link
           href={site.mainSite}
+          aria-label="Full portfolio at byronjones.vercel.app"
           className="group inline-flex items-center gap-1.5 font-mono text-sm text-muted-foreground transition-colors hover:text-amber"
         >
-          byronjones.vercel.app
+          Full portfolio
           <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </Link>
 
