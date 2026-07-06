@@ -30,16 +30,17 @@ low and a high float.
 
 | Tag | Device | Type | Address |
 | --- | --- | --- | --- |
-| `LSL` | Low-level float | NO (true when level reaches it) | `%IX0.0` |
-| `LSH` | High-level float | NO | `%IX0.1` |
-| `LSHH` | High-high (overflow) float | NO | `%IX0.2` |
-| `HOA-Hand` | Selector position | NO | `%IX0.3` |
-| `HOA-Auto` | Selector position | NO | `%IX0.4` |
-| `ACK/Reset` | Pushbutton | NO, momentary | `%IX0.5` |
-| `Pump` | Pump contactor coil | Output | `%QX0.0` |
-| `Overflow alarm` | Horn / beacon | Output | `%QX0.1` |
+| `LSL` | Low-level float | NO (true at the low setpoint) | `%IX0.0` |
+| `LSH` | High-level float | NO (true at the high setpoint) | `%IX0.1` |
+| `LSHH` | High-high (overflow) float | NO (true at overflow) | `%IX0.2` |
+| `HAND` | HOA selector — Hand | NO | `%IX0.3` |
+| `AUTO` | HOA selector — Auto | NO | `%IX0.4` |
+| `RESET` | Acknowledge / reset pushbutton | NO, momentary | `%IX0.5` |
+| `PUMP` | Pump contactor coil | Output | `%QX0.0` |
+| `ALARM` | Overflow horn / beacon | Output | `%QX0.1` |
 
-> Discrete float switches keep the logic readable. The same scheme scales to an
+> `PUMP_CALL` — the fill latch — is an internal memory bit, not wired I/O.
+> Discrete float switches keep the logic readable; the same scheme scales to an
 > analog level transmitter (`LT`, 4–20 mA) by comparing the measured level to
 > numeric setpoints with a deadband — the control concept is identical.
 
@@ -47,24 +48,21 @@ low and a high float.
 
 ### Automatic mode — two-point control with deadband
 
-The core is a **set/reset latch** that I'll call `Fill`. It captures the idea of
-"I'm in the middle of filling, keep going":
+The core is a **set/reset latch**, `PUMP_CALL`, that keeps the pump running for a
+full fill:
 
 ```
-SET   Fill   when the low float clears   (LSL = 0, level fell below it)
-RESET Fill   when the high float is made (LSH = 1, level reached it)
+SET   PUMP_CALL   when the low float makes   (LSL = 1, level at the low setpoint)
+RESET PUMP_CALL   when the high float makes  (LSH = 1, level at the high setpoint)
 ```
 
-The floats read "wet" (1) when liquid reaches them, so a falling level *clears*
-the low float — that's the call to start filling.
-
-Because the latch is *set* at the low float and only *reset* at the high float,
-the pump runs the tank all the way from low up to high, then stays off until the
-level falls back to low again. The gap between `LSL` and `LSH` is the **deadband**
-— it's what eliminates short-cycling. In auto:
+Set at the low float and reset only at the high float, the pump runs the tank
+from low all the way up to high, then stays off until the level falls back to
+low. The gap between `LSL` and `LSH` is the **deadband** — it's what eliminates
+short-cycling. In auto:
 
 ```
-Pump (Auto) = Fill AND HOA-Auto AND NOT Overflow
+Pump (Auto) = AUTO AND PUMP_CALL AND NOT ALARM
 ```
 
 ### Hand mode — manual override, interlock retained
@@ -76,7 +74,7 @@ interlock is still enforced — a manual mode should never be able to flood the
 tank:
 
 ```
-Pump (Hand) = HOA-Hand AND NOT Overflow
+Pump (Hand) = HAND AND NOT ALARM
 Pump = Pump(Auto) OR Pump(Hand)
 ```
 
@@ -89,10 +87,59 @@ If the level ever reaches the high-high float `LSHH`, something has failed (a
 stuck `LSH`, a control fault, a stuck pump). The response is latched so the event
 can't be missed:
 
-- Set an `Overflow` latch on `LSHH`.
-- `Overflow` forces the pump **off** in every mode and energizes the alarm.
+- An `ALARM` latch sets on `LSHH`.
+- `ALARM` forces the pump **off** in every mode and energizes the horn.
 - The latch holds until the level has recovered **and** the operator presses
-  `ACK/Reset` — so the alarm can't simply clear itself the moment the level dips.
+  `RESET` — so the alarm can't simply clear itself the moment the level dips.
+
+### The logic (three rungs)
+
+The finished OpenPLC program is three rungs: the fill latch, the overflow-alarm
+latch, and the pump output.
+
+**Rung 1 — auto fill latch.** `LSL` in parallel with the `PUMP_CALL` seal
+contact, in series with a normally-closed `LSH`. Starts on low level, seals in,
+and drops out at high level — the two-point hysteresis:
+
+```
+  LSL              LSH        PUMP_CALL
+|--] [------+------]/[---------(  )-------|
+|           |                             |
+| PUMP_CALL |                             |
+|--] [------+                             |
+```
+
+**Rung 2 — overflow alarm latch.** Same seal-in pattern, tripped by `LSHH` and
+cleared only by a normally-closed `RESET`:
+
+```
+  LSHH             RESET      ALARM
+|--] [------+------]/[---------(  )-------|
+|           |                             |
+|  ALARM    |                             |
+|--] [------+                             |
+```
+
+**Rung 3 — pump output.** `HAND` in parallel with (`AUTO` **and** `PUMP_CALL`),
+then a normally-closed `ALARM` in series. The pump runs on a manual Hand call or
+on an automatic fill call — but the `ALARM` interlock opens the rung and forces
+it off regardless of selector position:
+
+```
+  HAND                    ALARM       PUMP
+|--] [-----------+---------]/[---------(  )-------|
+|                |                                |
+| AUTO  PUMP_CALL|                                |
+|--] [---] [-----+                                |
+```
+
+In boolean terms:
+
+```
+PUMP_CALL = (LSL OR PUMP_CALL) AND NOT LSH          ' fill latch (hysteresis)
+ALARM     = (LSHH OR ALARM) AND NOT RESET           ' overflow latch
+PUMP      = (HAND OR (AUTO AND PUMP_CALL)) AND NOT ALARM
+```
 
 ### Sequence of operation
 
@@ -104,7 +151,7 @@ can't be missed:
 | Hand selected | On | — |
 | Off selected | Off | — |
 | Level reaches `LSHH` | Forced Off | On (latched) |
-| `ACK/Reset` after recovery | resumes mode | Clears |
+| `RESET` after recovery | resumes mode | Clears |
 
 ## Live simulation
 
@@ -116,18 +163,17 @@ for the browser — the real ladder runs in OpenPLC; export in the repo.)
 
 <TankSim />
 
-## Visuals
+<TankScenarios />
 
-{/* Add the OpenPLC ladder screenshot and a P&ID-style sketch to
-    /public/projects/tank-level/ then reference them here, e.g.:
+## Simulator demo
 
-![OpenPLC ladder for the tank level control](/projects/tank-level/ladder.png)
-![Tank, floats, and pump P&ID sketch](/projects/tank-level/pid.png)
-*/}
+A short clip of the program running in the OpenPLC runtime — the pump cycling
+between the low and high floats, and the overflow alarm latching at high-high.
 
-> To be added: OpenPLC ladder view, a simple P&ID-style sketch of the tank /
-> floats / pump, and a clip showing the pump cycling between the low and high
-> floats and the overflow alarm latching at high-high.
+<video controls preload="metadata" className="mt-4 w-full rounded-lg border border-border">
+  <source src="/projects/tank-level-control/tank-level-plc-demo.mp4" type="video/mp4" />
+  Your browser doesn’t support embedded video.
+</video>
 
 ## Skills used
 

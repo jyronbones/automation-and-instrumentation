@@ -16,8 +16,8 @@ export interface Scenario {
   caption: string;
   /** Screenshot path under /public. If omitted, a placeholder is shown. */
   src?: string;
-  /** Output states for the mini indicator row. */
-  io?: { motor?: boolean; run?: boolean; fault?: boolean };
+  /** Output indicator lamps for the mini status row. */
+  lamps?: { label: string; on: boolean; color?: "amber" | "green" | "red" }[];
 }
 
 /** Seconds each step is shown during auto-play. */
@@ -120,11 +120,11 @@ export function ScenarioViewer({
                 {active?.signal && (
                   <span className="signal-pill text-amber">{active.signal}</span>
                 )}
-                {active?.io && (
+                {active?.lamps && active.lamps.length > 0 && (
                   <div className="flex items-center gap-4">
-                    <Lamp on={!!active.io.motor} label="Motor" color="amber" />
-                    <Lamp on={!!active.io.run} label="Run" color="green" />
-                    <Lamp on={!!active.io.fault} label="Fault" color="red" />
+                    {active.lamps.map((l) => (
+                      <Lamp key={l.label} on={l.on} label={l.label} color={l.color} />
+                    ))}
                   </div>
                 )}
               </div>

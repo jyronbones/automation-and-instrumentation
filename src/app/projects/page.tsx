@@ -18,7 +18,7 @@ export default function ProjectsPage() {
       <ScrollReveal>
         <SectionLabel>Projects</SectionLabel>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          Control logic & instrumentation
+          Automation & Control Logic
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
           Control logic, process control, and sequencing projects built and
