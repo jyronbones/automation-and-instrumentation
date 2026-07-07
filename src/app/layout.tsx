@@ -18,12 +18,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} — Instrumentation & Automation`,
+    default: `${site.name} — Automation & Control Logic`,
     template: `%s — ${site.name}`,
   },
   description: site.tagline,
   openGraph: {
-    title: `${site.name} — Instrumentation & Automation`,
+    title: `${site.name} — Automation & Control Logic`,
     description: site.subtitle,
     url: site.url,
     siteName: site.name,
