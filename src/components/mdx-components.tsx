@@ -5,6 +5,7 @@ import { TankSim } from "@/components/plc/tank-sim";
 import { ConveyorSim } from "@/components/plc/conveyor-sim";
 import { MotorScenarios } from "@/components/plc/motor-scenarios";
 import { TankScenarios } from "@/components/plc/tank-scenarios";
+import { ConveyorRungs } from "@/components/plc/conveyor-rungs";
 import { WiringDiagram } from "@/components/plc/wiring-diagram";
 
 /** Styling map for MDX project bodies — keeps the industrial tone. */
@@ -15,6 +16,7 @@ export const mdxComponents: MDXComponents = {
   ConveyorSim,
   MotorScenarios,
   TankScenarios,
+  ConveyorRungs,
   WiringDiagram,
 
   h2: (props) => (

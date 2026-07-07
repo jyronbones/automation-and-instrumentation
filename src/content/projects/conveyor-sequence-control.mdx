@@ -39,8 +39,13 @@ moving isn't.
 | `M-102` | `CV-102` (discharge) motor | Output | `%QX0.1` |
 | `M-101` | `CV-101` (feed) motor | Output | `%QX0.2` |
 
-Timers used: `T_horn` (pre-start warning, ~10 s), `T_seq` (delay between belts,
-~3 s), and `T_zs` (zero-speed trip delay, ~5 s).
+Timers: `T_horn` (pre-start warning, ~10 s), `T_seq` (delay between belts, ~3 s),
+`T_clearoff` (discharge run-on after Stop, ~3 s), and `T_zs` (zero-speed trip
+delay, ~5 s — one per belt).
+
+Internal bits, worked out across the rungs below: `RUN_CMD` (master run latch),
+`HORN_DONE`, `M102_CMD` / `M102_HOLD`, `SEQ_READY`, the per-belt `ZS…_FAULT`
+bits, the latched `FAULT`, and `HARD_TRIP` (the instant-stop path).
 
 ## Logic explanation
 
@@ -58,19 +63,20 @@ shutting down each belt gets a chance to run clear before the one feeding it sto
 
 1. Operator presses `Start` with all safety devices healthy (`Stop` and
    `Pull-cord` closed, no latched fault).
-2. The **horn** sounds for `T_horn` (~10 s) — *nothing moves yet*. This is the
-   legally important "everyone clear of the belt" warning.
+2. The **horn** sounds for `T_horn` (~10 s) — *nothing moves yet* — the required
+   "everyone clear of the belt" pre-start warning.
 3. `T_horn` done → start **`M-102`** (discharge belt).
 4. `ZS-102` confirms `CV-102` is actually turning; after a short `T_seq` delay →
    start **`M-101`** (feed belt). Material now only ever lands on a moving belt.
 
-Each motor seals in (latches) once running, the same pattern as the motor project.
+One master latch, `RUN_CMD`, seals in on Start and holds the sequence; the belts
+are driven off that latch and the sequencing timers, not by per-motor seal-ins.
 
 ### Stop sequence
 
 Pressing `Stop` drops `M-101` (feed) **immediately** so no new material is added,
-then `M-102` keeps running for a clear-off delay (a TOF / off-delay timer) before
-it stops — clearing whatever is still on the discharge belt.
+then `M-102` keeps running for a clear-off delay (`T_clearoff`, a TOF off-delay
+timer) before it stops — clearing whatever is still on the discharge belt.
 
 ### Safety — pull-cord and emergency stop
 
@@ -87,9 +93,9 @@ contactor will still say "on." A **zero-speed switch** watches actual belt motio
 
 - If a motor is commanded on but its `ZS` shows no motion for longer than `T_zs`
   (~5 s), a **fault** latches.
-- A fault trips that belt **and everything upstream of it** (so a stalled `CV-102`
-  also stops `CV-101`, preventing a spill onto a dead belt).
-- The fault stays latched, with the alarm, until the operator presses `Reset`.
+- The latched `FAULT` drops `RUN_CMD` and fires `HARD_TRIP`, stopping **both
+  belts** — a stalled belt can't keep taking material from the one feeding it.
+- The fault holds until the operator clears the cause and presses `Reset`.
 
 ### Sequence of operation
 
@@ -101,7 +107,7 @@ contactor will still say "on." A **zero-speed switch** watches actual belt motio
 | Running steady | Off | Run | Run |
 | Stop pressed | Off | Run (clear-off) | Stop first |
 | Pull-cord / E-stop | Off | Trip | Trip |
-| `CV-102` zero-speed fault | Off | Trip | Trip (upstream) |
+| Zero-speed fault (either belt) | Off | Trip | Trip |
 
 ## Live simulation
 
@@ -114,23 +120,18 @@ repo.)
 
 <ConveyorSim />
 
-## Visuals
+## Ladder logic
 
-{/* Add the OpenPLC ladder screenshot and a flow sketch to
-    /public/projects/conveyor/ then reference them here, e.g.:
+The full OpenPLC program, one rung at a time — the run command and interlocks,
+the pre-start horn, the discharge-then-feed start sequence, zero-speed fault
+detection, and the fault latch and hard-trip path that tie it together.
 
-![OpenPLC ladder for the conveyor sequence](/projects/conveyor/ladder.png)
-![Two-belt conveyor flow and sensor layout](/projects/conveyor/layout.png)
-*/}
-
-> To be added: OpenPLC ladder view, a layout sketch of the two belts with the
-> horn / pull-cord / zero-speed devices, and a clip of the full start sequence —
-> horn, discharge belt, then feed belt — plus a pull-cord trip.
+<ConveyorRungs />
 
 ## Skills used
 
 - Multi-device start/stop sequencing with the correct material-flow order
 - On-delay and off-delay timers (TON / TOF) for warning and clear-off behaviour
 - Pre-start warning and fail-safe pull-cord / E-stop interlocking
-- Zero-speed fault detection with upstream tripping and latched faults
+- Zero-speed fault detection with a latched, line-wide trip
 - Building a coordinated, recoverable line-control routine in OpenPLC

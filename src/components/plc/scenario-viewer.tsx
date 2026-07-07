@@ -33,12 +33,15 @@ export function ScenarioViewer({
   subtitle,
   scenarios,
   placeholderDir,
+  idleBadge = "Live ladder",
 }: {
   title: string;
   subtitle?: string;
   scenarios: Scenario[];
   /** Folder under /public where the screenshots live (for the placeholder hint). */
   placeholderDir: string;
+  /** Header badge text when not auto-playing. Defaults to "Live ladder". */
+  idleBadge?: string;
 }) {
   const n = scenarios.length;
   const [index, setIndex] = useState(0);
@@ -82,7 +85,7 @@ export function ScenarioViewer({
               </p>
             )}
           </div>
-          <ScanBadge playing={playing} />
+          <ScanBadge playing={playing} idleLabel={idleBadge} />
         </div>
 
         {/* Body */}
@@ -229,7 +232,7 @@ function IconButton({
   );
 }
 
-function ScanBadge({ playing }: { playing: boolean }) {
+function ScanBadge({ playing, idleLabel }: { playing: boolean; idleLabel: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-widest text-amber">
       <span className="relative flex h-1.5 w-1.5">
@@ -238,7 +241,7 @@ function ScanBadge({ playing }: { playing: boolean }) {
         )}
         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber" />
       </span>
-      {playing ? "Playing" : "Live ladder"}
+      {playing ? "Playing" : idleLabel}
     </span>
   );
 }
